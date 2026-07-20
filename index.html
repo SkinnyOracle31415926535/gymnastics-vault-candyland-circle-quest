@@ -696,6 +696,14 @@
     .report-bar-value { color: var(--ink); font-size: 11px; font-weight: 1000; }
     .report-bar-label { color: var(--muted); font-size: 10px; font-weight: 900; white-space: nowrap; }
     .report-empty { display: grid; grid-column: 1 / -1; place-items: center; min-height: 180px; color: var(--muted); font-weight: 800; text-align: center; }
+    .report-timeline-title { margin: 20px 0 8px; color: var(--ink); font-family: "Arial Rounded MT Bold", "Comic Sans MS", sans-serif; font-size: 18px; }
+    .report-timeline { display: grid; gap: 7px; max-height: 310px; overflow-y: auto; padding: 3px; }
+    .report-turn { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 9px; align-items: center; padding: 9px 10px; border: 3px solid var(--ink); border-radius: 7px; color: var(--ink); background: #fffdf3; box-shadow: 2px 2px 0 rgba(29,37,65,.25); }
+    .report-turn time { color: #1e5ca7; font-family: "Courier New", monospace; font-size: 11px; font-weight: 1000; }
+    .report-turn strong, .report-turn small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .report-turn small { margin-top: 2px; color: var(--muted); font-size: 11px; }
+    .report-running { color: #c33655; font-size: 12px; font-weight: 1000; text-align: right; }
+    .report-timeline-empty { padding: 18px; border: 2px dashed #a98d58; border-radius: 7px; color: var(--muted); font-weight: 800; text-align: center; }
     @media (max-width: 440px) { .report-periods { grid-template-columns: repeat(2, 1fr); } }
   </style>
   <!-- Gymnastics Vault icon -->
@@ -775,6 +783,8 @@
       <div class="report-controls"><label for="reportStudentSelect">Student<select id="reportStudentSelect"></select></label><div class="report-periods" aria-label="Report period"><button class="button light small is-active" type="button" data-report-period="daily">Daily</button><button class="button light small" type="button" data-report-period="weekly">Weekly</button><button class="button light small" type="button" data-report-period="monthly">Monthly</button><button class="button light small" type="button" data-report-period="yearly">Yearly</button></div></div>
       <div class="report-summary" id="reportSummary">No circles recorded yet.</div>
       <div class="report-chart" id="reportChart" aria-live="polite"></div>
+      <h3 class="report-timeline-title">Today's turn progress</h3>
+      <div class="report-timeline" id="reportTodayTimeline" aria-live="polite"></div>
     </div>
   </dialog>
 
@@ -1051,6 +1061,21 @@
         if (period === 'monthly') return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         return String(date.getFullYear());
       }
+      function renderTodayTimeline(selectedAthlete) {
+        const today = localDateKey(new Date());
+        const todayEntries = state.history
+          .filter((entry) => (selectedAthlete === 'all' || entry.athleteId === selectedAthlete) && (entry.localDate || localDateKey(new Date(entry.timestamp))) === today)
+          .sort((left, right) => new Date(left.timestamp) - new Date(right.timestamp));
+        const timeline = el('#reportTodayTimeline');
+        if (!todayEntries.length) { timeline.innerHTML = '<div class="report-timeline-empty">No turns recorded today yet.</div>'; return; }
+        const runningTotals = new Map();
+        timeline.innerHTML = todayEntries.map((entry) => {
+          const running = (runningTotals.get(entry.athleteId) || 0) + cleanNumber(entry.circles);
+          runningTotals.set(entry.athleteId, running);
+          const time = new Date(entry.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+          return `<article class="report-turn"><time datetime="${safeText(entry.timestamp)}">${safeText(time)}</time><div><strong>${safeText(entry.athleteName)}</strong><small>${formatCircleNumber(entry.circles)} circles · ${entry.cards} ${entry.cards === 1 ? 'card' : 'cards'}</small></div><span class="report-running">${formatCircleNumber(running)} today</span></article>`;
+        }).join('');
+      }
       function renderReports() {
         const select = el('#reportStudentSelect');
         const previous = select.value || 'all';
@@ -1071,6 +1096,7 @@
         el('#reportSummary').textContent = entries.length ? `Average ${formatCircleNumber(average)} circles per recorded turn · ${entries.length} turn${entries.length === 1 ? '' : 's'} across ${activeBuckets.length} active ${reportPeriod === 'daily' ? 'day' : reportPeriod === 'weekly' ? 'week' : reportPeriod === 'monthly' ? 'month' : 'year'}${activeBuckets.length === 1 ? '' : 's'}` : `No positive-circle turns for this ${periodLabel.toLowerCase()} view.`;
         const chart = el('#reportChart');
         chart.style.setProperty('--bar-count', Math.max(activeBuckets.length, 1));
+        renderTodayTimeline(selectedAthlete);
         if (!entries.length) { chart.innerHTML = '<div class="report-empty">Finish a turn with Show cards to start building this report.</div>'; return; }
         const max = Math.max(...activeBuckets.map((bucket) => bucket.total / bucket.turns), 1);
         chart.innerHTML = activeBuckets.map((bucket) => { const bucketAverage = bucket.total / bucket.turns; return `<div class="report-bar" title="${safeText(bucket.label)}: ${formatCircleNumber(bucketAverage)} average circles across ${bucket.turns} turn${bucket.turns === 1 ? '' : 's'}"><div class="report-bar-fill" style="height:${Math.max(8, bucketAverage / max * 100)}%"></div><span class="report-bar-value">${formatCircleNumber(bucketAverage)}</span><span class="report-bar-label">${safeText(bucket.label)}</span></div>`; }).join('');
