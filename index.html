@@ -661,6 +661,7 @@
     .wizard-pin-pad .pin-key { min-height: 50px; }
     .wizard-pin-pad .pin-key[data-turn-pad="clear"] { color: #fff; background: linear-gradient(145deg, #ffa3c5, #e84b83); }
     .wizard-pin-pad .pin-key[data-turn-pad="back"] { color: #fff; background: linear-gradient(145deg, #9de1bb, #50aa7d); }
+    .wizard-pin-pad .wizard-decimal-key { grid-column: 1 / -1; }
     .turn-wizard-actions { display: flex; gap: 10px; margin-top: 18px; }
     .turn-wizard-actions .button { flex: 1; }
     .turn-wizard .button:disabled { cursor: not-allowed; opacity: .55; transform: none; box-shadow: 2px 3px 0 var(--ink); }
@@ -720,7 +721,7 @@
         <p class="turn-wizard-intro">How many circles did <strong id="turnAthleteName">this kid</strong> do?</p>
         <label class="turn-number-label" for="turnCircleAmount">Circles completed<input class="turn-number-input" id="turnCircleAmount" type="text" readonly aria-describedby="turnInputMessage" aria-label="Circles completed; use the keypad" placeholder="0"></label>
         <p class="turn-input-message" id="turnInputMessage" aria-live="polite"></p>
-        <div class="pin-pad wizard-pin-pad" aria-label="Circle number keypad"><button class="pin-key" type="button" data-turn-pad="1">1</button><button class="pin-key" type="button" data-turn-pad="2">2</button><button class="pin-key" type="button" data-turn-pad="3">3</button><button class="pin-key" type="button" data-turn-pad="4">4</button><button class="pin-key" type="button" data-turn-pad="5">5</button><button class="pin-key" type="button" data-turn-pad="6">6</button><button class="pin-key" type="button" data-turn-pad="7">7</button><button class="pin-key" type="button" data-turn-pad="8">8</button><button class="pin-key" type="button" data-turn-pad="9">9</button><button class="pin-key" type="button" data-turn-pad="clear">C</button><button class="pin-key" type="button" data-turn-pad="0">0</button><button class="pin-key" type="button" data-turn-pad="back" aria-label="Backspace">⌫</button></div>
+        <div class="pin-pad wizard-pin-pad" aria-label="Circle number keypad"><button class="pin-key" type="button" data-turn-pad="1">1</button><button class="pin-key" type="button" data-turn-pad="2">2</button><button class="pin-key" type="button" data-turn-pad="3">3</button><button class="pin-key" type="button" data-turn-pad="4">4</button><button class="pin-key" type="button" data-turn-pad="5">5</button><button class="pin-key" type="button" data-turn-pad="6">6</button><button class="pin-key" type="button" data-turn-pad="7">7</button><button class="pin-key" type="button" data-turn-pad="8">8</button><button class="pin-key" type="button" data-turn-pad="9">9</button><button class="pin-key" type="button" data-turn-pad="clear">C</button><button class="pin-key" type="button" data-turn-pad="0">0</button><button class="pin-key" type="button" data-turn-pad="back" aria-label="Backspace">⌫</button><button class="pin-key wizard-decimal-key" type="button" data-turn-pad="." aria-label="Decimal point">.</button></div>
         <div class="turn-wizard-actions"><button class="button light" id="changeTurnAthleteButton" type="button">Change kid</button><button class="button pink" id="showCardsButton" type="submit" disabled>Show cards</button></div>
       </form>
       <section class="turn-screen" id="turnResultScreen" aria-live="polite" hidden><div class="turn-result"><span class="turn-result-kicker" id="turnResultKicker">Card result</span><output class="turn-result-count" id="turnResultCount">0</output><span class="turn-result-word" id="turnResultWord">cards</span><p class="turn-result-copy" id="turnResultSummary"></p></div><div class="turn-wizard-actions"><button class="button light" id="editTurnAmountButton" type="button">Edit circles</button><button class="button pink" id="nextKidButton" type="button">Next kid</button></div></section>
@@ -1100,18 +1101,20 @@
       function turnAmountValue() {
         const raw = el('#turnCircleAmount').value.trim();
         const amount = cleanNumber(raw, NaN);
-        return raw && Number.isInteger(amount) && amount >= 0 ? amount : null;
+        return raw && !raw.endsWith('.') && Number.isFinite(amount) && amount >= 0 ? amount : null;
       }
       function updateTurnAmount() {
         const amount = turnAmountValue();
         el('#showCardsButton').disabled = amount === null;
-        el('#turnInputMessage').textContent = el('#turnCircleAmount').value && amount === null ? 'Enter a whole circle number.' : '';
+        const raw = el('#turnCircleAmount').value;
+        el('#turnInputMessage').textContent = raw.endsWith('.') ? 'Add a digit after the decimal point.' : raw && amount === null ? 'Enter zero or a positive circle number.' : '';
       }
       function pressTurnPad(key) {
         const input = el('#turnCircleAmount');
         let value = input.value || '';
         if (key === 'clear') value = '';
         else if (key === 'back') value = value.slice(0, -1);
+        else if (key === '.') { if (!value.includes('.')) value = value ? `${value}.` : '0.'; }
         else if (!value || value === '0') value = key;
         else if (value.length < 5) value += key;
         input.value = value;
