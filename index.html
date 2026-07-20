@@ -1059,18 +1059,21 @@
         select.value = [...select.options].some((option) => option.value === previous) ? previous : 'all';
         const selectedAthlete = select.value;
         const buckets = reportBuckets(reportPeriod);
+        buckets.forEach((bucket) => { bucket.turns = 0; });
         const bucketByKey = new Map(buckets.map((bucket) => [bucket.key, bucket]));
-        const entries = state.history.filter((entry) => selectedAthlete === 'all' || entry.athleteId === selectedAthlete);
-        entries.forEach((entry) => { const bucket = bucketByKey.get(eventBucketKey(entry, reportPeriod)); if (bucket) bucket.total += cleanNumber(entry.circles); });
+        const entries = state.history.filter((entry) => (selectedAthlete === 'all' || entry.athleteId === selectedAthlete) && cleanNumber(entry.circles) > 0);
+        entries.forEach((entry) => { const bucket = bucketByKey.get(eventBucketKey(entry, reportPeriod)); if (bucket) { bucket.total += cleanNumber(entry.circles); bucket.turns += 1; } });
         els('[data-report-period]').forEach((button) => button.classList.toggle('is-active', button.dataset.reportPeriod === reportPeriod));
-        const total = buckets.reduce((sum, bucket) => sum + bucket.total, 0);
+        const activeBuckets = buckets.filter((bucket) => bucket.total > 0);
+        const total = activeBuckets.reduce((sum, bucket) => sum + bucket.total, 0);
         const periodLabel = reportPeriod.charAt(0).toUpperCase() + reportPeriod.slice(1);
-        el('#reportSummary').textContent = entries.length ? `${formatCircleNumber(total)} circles across ${entries.length} recorded turn${entries.length === 1 ? '' : 's'} · ${periodLabel} view` : `No recorded turns for this ${periodLabel.toLowerCase()} view.`;
+        const average = entries.length ? total / entries.length : 0;
+        el('#reportSummary').textContent = entries.length ? `Average ${formatCircleNumber(average)} circles per recorded turn · ${entries.length} turn${entries.length === 1 ? '' : 's'} across ${activeBuckets.length} active ${reportPeriod === 'daily' ? 'day' : reportPeriod === 'weekly' ? 'week' : reportPeriod === 'monthly' ? 'month' : 'year'}${activeBuckets.length === 1 ? '' : 's'}` : `No positive-circle turns for this ${periodLabel.toLowerCase()} view.`;
         const chart = el('#reportChart');
-        chart.style.setProperty('--bar-count', buckets.length);
+        chart.style.setProperty('--bar-count', Math.max(activeBuckets.length, 1));
         if (!entries.length) { chart.innerHTML = '<div class="report-empty">Finish a turn with Show cards to start building this report.</div>'; return; }
-        const max = Math.max(...buckets.map((bucket) => bucket.total), 1);
-        chart.innerHTML = buckets.map((bucket) => `<div class="report-bar" title="${safeText(bucket.label)}: ${formatCircleNumber(bucket.total)} circles"><div class="report-bar-fill" style="height:${Math.max(bucket.total ? 8 : 0, bucket.total / max * 100)}%"></div><span class="report-bar-value">${formatCircleNumber(bucket.total)}</span><span class="report-bar-label">${safeText(bucket.label)}</span></div>`).join('');
+        const max = Math.max(...activeBuckets.map((bucket) => bucket.total / bucket.turns), 1);
+        chart.innerHTML = activeBuckets.map((bucket) => { const bucketAverage = bucket.total / bucket.turns; return `<div class="report-bar" title="${safeText(bucket.label)}: ${formatCircleNumber(bucketAverage)} average circles across ${bucket.turns} turn${bucket.turns === 1 ? '' : 's'}"><div class="report-bar-fill" style="height:${Math.max(8, bucketAverage / max * 100)}%"></div><span class="report-bar-value">${formatCircleNumber(bucketAverage)}</span><span class="report-bar-label">${safeText(bucket.label)}</span></div>`; }).join('');
       }
       function openReports() { reportPeriod = 'daily'; renderReports(); el('#reportsDialog').showModal(); }
 
