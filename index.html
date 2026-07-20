@@ -684,6 +684,19 @@
       .wizard-pin-pad .pin-key { min-height: 40px; }
       .turn-wizard-actions { margin-top: 10px; }
     }
+    .report-controls { display: grid; gap: 12px; }
+    .report-controls label { display: grid; gap: 5px; color: var(--ink); font-size: 12px; font-weight: 900; }
+    .report-periods { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .report-periods .button { min-height: 34px; padding: 5px 4px; font-size: 12px; }
+    .report-periods .is-active { color: #fffdf3; background: #1e5ca7; }
+    .report-summary { margin: 15px 0 10px; padding: 10px 12px; border: 3px solid var(--ink); border-radius: 7px; color: var(--ink); background: #fffdf3; box-shadow: 3px 3px 0 rgba(29,37,65,.3); font-weight: 900; }
+    .report-chart { display: grid; grid-template-columns: repeat(var(--bar-count), minmax(40px, 1fr)); align-items: end; gap: 7px; min-height: 235px; padding: 12px 9px 6px; overflow-x: auto; border: 3px solid var(--ink); border-radius: 7px; background: #f8edbd; }
+    .report-bar { display: grid; grid-template-rows: 1fr auto auto; min-width: 40px; height: 210px; gap: 4px; text-align: center; }
+    .report-bar-fill { align-self: end; min-height: 3px; border: 2px solid var(--ink); border-radius: 4px 4px 0 0; background: repeating-linear-gradient(45deg, #e94b83 0 7px, #ffcc4d 7px 14px, #72bde8 14px 21px); }
+    .report-bar-value { color: var(--ink); font-size: 11px; font-weight: 1000; }
+    .report-bar-label { color: var(--muted); font-size: 10px; font-weight: 900; white-space: nowrap; }
+    .report-empty { display: grid; grid-column: 1 / -1; place-items: center; min-height: 180px; color: var(--muted); font-weight: 800; text-align: center; }
+    @media (max-width: 440px) { .report-periods { grid-template-columns: repeat(2, 1fr); } }
   </style>
   <!-- Gymnastics Vault icon -->
   <link rel="icon" type="image/png" href="icon.png">
@@ -701,6 +714,7 @@
       </div>
       <div class="header-actions">
         <button class="button light small" id="soundToggleButton" type="button" aria-pressed="true">Sounds: On</button>
+        <button class="button light small" id="reportsButton" type="button">Reports</button>
         <button class="button light small" id="manageButton" type="button">Settings</button>
       </div>
     </header>
@@ -753,6 +767,15 @@
   <dialog id="manageDialog">
     <div class="modal-head"><div><h2 id="manageDialogTitle">Settings</h2></div><button class="icon-button" data-close="manageDialog" aria-label="Close">×</button></div>
     <div class="modal-body"><p>Open a class to add students or edit their personal card goals.</p><div id="manageContent"></div></div>
+  </dialog>
+
+  <dialog id="reportsDialog">
+    <div class="modal-head"><div><h2>Circle Reports</h2></div><button class="icon-button" data-close="reportsDialog" aria-label="Close">×</button></div>
+    <div class="modal-body">
+      <div class="report-controls"><label for="reportStudentSelect">Student<select id="reportStudentSelect"></select></label><div class="report-periods" aria-label="Report period"><button class="button light small is-active" type="button" data-report-period="daily">Daily</button><button class="button light small" type="button" data-report-period="weekly">Weekly</button><button class="button light small" type="button" data-report-period="monthly">Monthly</button><button class="button light small" type="button" data-report-period="yearly">Yearly</button></div></div>
+      <div class="report-summary" id="reportSummary">No circles recorded yet.</div>
+      <div class="report-chart" id="reportChart" aria-live="polite"></div>
+    </div>
   </dialog>
 
   <dialog id="athleteDialog">
@@ -894,6 +917,7 @@
       let lastTurn = null;
       let turnStep = 'pick';
       let settingsClassId = '';
+      let reportPeriod = 'daily';
 
       function updateSoundToggle() {
         const button = el('#soundToggleButton');
@@ -957,6 +981,20 @@
         el('#saveNote').textContent = `Goals saved · ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
         if (message) toast(message, 'success');
       }
+      function localDateKey(date) {
+        const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+        return offsetDate.toISOString().slice(0, 10);
+      }
+      function startOfWeek(date) {
+        const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+        return start;
+      }
+      function recordTurn(group, athlete, result) {
+        const now = new Date();
+        state.history.push({ id: id('turn'), timestamp: now.toISOString(), localDate: localDateKey(now), classId: group.id, className: group.name, athleteId: athlete.id, athleteName: athlete.name, circles: result.work, cards: result.cards });
+        saveState(`Recorded ${formatCircles(result.work)} for ${athlete.name}.`);
+      }
       function toast(message, type = '') {
         const node = el('#toast');
         node.textContent = message;
@@ -987,6 +1025,54 @@
         return { cards, work, base, increment };
       }
       function safeText(value) { return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char])); }
+
+      function reportBuckets(period) {
+        const now = new Date();
+        const buckets = [];
+        if (period === 'daily') {
+          const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 13);
+          for (let index = 0; index < 14; index += 1) { const date = new Date(start); date.setDate(start.getDate() + index); buckets.push({ key: localDateKey(date), label: `${date.getMonth() + 1}/${date.getDate()}`, total: 0 }); }
+        } else if (period === 'weekly') {
+          const start = startOfWeek(now); start.setDate(start.getDate() - 77);
+          for (let index = 0; index < 12; index += 1) { const date = new Date(start); date.setDate(start.getDate() + index * 7); buckets.push({ key: localDateKey(date), label: `${date.getMonth() + 1}/${date.getDate()}`, total: 0 }); }
+        } else if (period === 'monthly') {
+          const start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+          for (let index = 0; index < 12; index += 1) { const date = new Date(start.getFullYear(), start.getMonth() + index, 1); buckets.push({ key: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`, label: date.toLocaleDateString([], { month: 'short' }), total: 0 }); }
+        } else {
+          for (let year = now.getFullYear() - 4; year <= now.getFullYear(); year += 1) buckets.push({ key: String(year), label: String(year), total: 0 });
+        }
+        return buckets;
+      }
+      function eventBucketKey(entry, period) {
+        const date = new Date(entry.timestamp);
+        if (Number.isNaN(date.getTime())) return '';
+        if (period === 'daily') return localDateKey(date);
+        if (period === 'weekly') return localDateKey(startOfWeek(date));
+        if (period === 'monthly') return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        return String(date.getFullYear());
+      }
+      function renderReports() {
+        const select = el('#reportStudentSelect');
+        const previous = select.value || 'all';
+        const athleteOptions = state.classes.flatMap((group) => group.athletes.map((athlete) => `<option value="${athlete.id}">${safeText(athlete.name)} · ${safeText(group.name)}</option>`));
+        select.innerHTML = `<option value="all">All students</option>${athleteOptions.join('')}`;
+        select.value = [...select.options].some((option) => option.value === previous) ? previous : 'all';
+        const selectedAthlete = select.value;
+        const buckets = reportBuckets(reportPeriod);
+        const bucketByKey = new Map(buckets.map((bucket) => [bucket.key, bucket]));
+        const entries = state.history.filter((entry) => selectedAthlete === 'all' || entry.athleteId === selectedAthlete);
+        entries.forEach((entry) => { const bucket = bucketByKey.get(eventBucketKey(entry, reportPeriod)); if (bucket) bucket.total += cleanNumber(entry.circles); });
+        els('[data-report-period]').forEach((button) => button.classList.toggle('is-active', button.dataset.reportPeriod === reportPeriod));
+        const total = buckets.reduce((sum, bucket) => sum + bucket.total, 0);
+        const periodLabel = reportPeriod.charAt(0).toUpperCase() + reportPeriod.slice(1);
+        el('#reportSummary').textContent = entries.length ? `${formatCircleNumber(total)} circles across ${entries.length} recorded turn${entries.length === 1 ? '' : 's'} · ${periodLabel} view` : `No recorded turns for this ${periodLabel.toLowerCase()} view.`;
+        const chart = el('#reportChart');
+        chart.style.setProperty('--bar-count', buckets.length);
+        if (!entries.length) { chart.innerHTML = '<div class="report-empty">Finish a turn with Show cards to start building this report.</div>'; return; }
+        const max = Math.max(...buckets.map((bucket) => bucket.total), 1);
+        chart.innerHTML = buckets.map((bucket) => `<div class="report-bar" title="${safeText(bucket.label)}: ${formatCircleNumber(bucket.total)} circles"><div class="report-bar-fill" style="height:${Math.max(bucket.total ? 8 : 0, bucket.total / max * 100)}%"></div><span class="report-bar-value">${formatCircleNumber(bucket.total)}</span><span class="report-bar-label">${safeText(bucket.label)}</span></div>`).join('');
+      }
+      function openReports() { reportPeriod = 'daily'; renderReports(); el('#reportsDialog').showModal(); }
 
       function renderAll() {
         const group = currentClass();
@@ -1140,6 +1226,7 @@
         if (!athlete || amount === null) { updateTurnAmount(); return; }
         const result = calculateCards(athlete, amount);
         lastTurn = { name: athlete.name, work: result.work, cards: result.cards };
+        recordTurn(currentClass(), athlete, result);
         setTurnStep('result');
       }
       function closeTurnWizard() { el('#turnFlowDialog').close(); }
@@ -1244,6 +1331,8 @@
 
       el('#classSelect').addEventListener('change', (event) => { state.selectedClassId = event.target.value; resetTurn(); saveState(); renderAll(); playSound('chime'); });
       el('#soundToggleButton').addEventListener('click', toggleSounds);
+      el('#reportsButton').addEventListener('click', openReports);
+      el('#reportStudentSelect').addEventListener('change', renderReports);
       el('#addClassButton').addEventListener('click', openClassDialog);
       el('#manageButton').addEventListener('click', openManageDialog);
       el('#openTurnFlowButton').addEventListener('click', openTurnWizard);
@@ -1267,6 +1356,8 @@
         }
         const close = event.target.closest('[data-close]');
         if (close) { el(`#${close.dataset.close}`).close(); return; }
+        const reportPeriodButton = event.target.closest('[data-report-period]');
+        if (reportPeriodButton) { reportPeriod = reportPeriodButton.dataset.reportPeriod; renderReports(); return; }
         const turnPad = event.target.closest('[data-turn-pad]');
         if (turnPad) { pressTurnPad(turnPad.dataset.turnPad); return; }
         const turnAthlete = event.target.closest('[data-turn-athlete]');
