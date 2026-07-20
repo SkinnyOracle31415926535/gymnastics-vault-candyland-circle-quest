@@ -737,8 +737,8 @@
   </dialog>
 
   <dialog id="manageDialog">
-    <div class="modal-head"><div><h2>Manage classes</h2></div><button class="icon-button" data-close="manageDialog" aria-label="Close">×</button></div>
-    <div class="modal-body"><p>Open a class to add an athlete or set personal goals. Use the class picker to switch which roster is playing.</p><div id="manageContent"></div></div>
+    <div class="modal-head"><div><h2 id="manageDialogTitle">Settings</h2></div><button class="icon-button" data-close="manageDialog" aria-label="Close">×</button></div>
+    <div class="modal-body"><p>Open a class to add students or edit their personal card goals.</p><div id="manageContent"></div></div>
   </dialog>
 
   <dialog id="athleteDialog">
@@ -879,6 +879,7 @@
       let selectedTurnAthleteId = '';
       let lastTurn = null;
       let turnStep = 'pick';
+      let settingsClassId = '';
 
       function updateSoundToggle() {
         const button = el('#soundToggleButton');
@@ -1141,16 +1142,31 @@
         openAthleteDialog();
       }
       function renderManageDialog() {
-        el('#manageContent').innerHTML = state.classes.map((group) => `<div class="management-class"><div><strong>${safeText(group.name)}</strong><small>${group.athletes.length} active athlete${group.athletes.length === 1 ? '' : 's'}</small></div><div><button class="button light small" type="button" data-manage-class="${group.id}">Open</button></div></div>`).join('');
+        const group = state.classes.find((item) => item.id === settingsClassId);
+        if (!group) {
+          settingsClassId = '';
+          el('#manageDialogTitle').textContent = 'Settings';
+          el('#manageContent').innerHTML = `<p>Choose a class to add or edit students and their goals.</p>${state.classes.map((item) => `<div class="management-class"><div><strong>${safeText(item.name)}</strong><small>${item.athletes.length} active athlete${item.athletes.length === 1 ? '' : 's'}</small></div><div><button class="button light small" type="button" data-manage-class="${item.id}">Open</button></div></div>`).join('')}`;
+          return;
+        }
+        el('#manageDialogTitle').textContent = group.name;
+        const studentRows = group.athletes.length
+          ? group.athletes.map((athlete) => `<div class="management-class"><div><strong>${safeText(athlete.name)}</strong><small>First card: ${formatCircles(currentCircleGoal(athlete))} · Extra cards: +${formatCircles(currentIncrementGoal(athlete))}</small></div><div><button class="button light small" type="button" data-edit-athlete="${athlete.id}">Edit</button></div></div>`).join('')
+          : '<p class="tiny-note">No students yet. Add one to set their card goals.</p>';
+        el('#manageContent').innerHTML = `<div class="modal-actions"><button class="button light small" type="button" data-settings-back>← Classes</button><button class="button pink small" type="button" data-add-athlete>Add student</button></div>${studentRows}`;
       }
-      function openManageDialog() { renderManageDialog(); el('#manageDialog').showModal(); }
+      function openManageDialog() { settingsClassId = ''; renderManageDialog(); el('#manageDialog').showModal(); }
       function selectManageClass(classId) {
         state.selectedClassId = classId;
+        settingsClassId = classId;
         resetTurn();
         saveState();
-        el('#manageDialog').close();
         renderAll();
-        openAthleteDialog();
+        renderManageDialog();
+      }
+      function openSettingsAthlete(athleteId = '') {
+        el('#manageDialog').close();
+        openAthleteDialog(athleteId);
       }
       function openAthleteDialog(athleteId = '') {
         const athlete = athleteId ? athleteById(athleteId) : null;
@@ -1182,6 +1198,7 @@
         saveState(existing ? `${athlete.name}'s rules updated.` : `${athlete.name} added.`);
         el('#athleteDialog').close();
         renderAll();
+        if (settingsClassId) { renderManageDialog(); el('#manageDialog').showModal(); }
       }
       function exportData() {
         const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
@@ -1245,7 +1262,11 @@
         const rapidAthlete = event.target.closest('[data-rapid-athlete]');
         if (rapidAthlete) { chooseRapidAthlete(rapidAthlete.dataset.rapidAthlete); return; }
         const edit = event.target.closest('[data-edit-athlete]');
-        if (edit) { openAthleteDialog(edit.dataset.editAthlete); return; }
+        if (edit) { openSettingsAthlete(edit.dataset.editAthlete); return; }
+        const addAthlete = event.target.closest('[data-add-athlete]');
+        if (addAthlete) { openSettingsAthlete(); return; }
+        const settingsBack = event.target.closest('[data-settings-back]');
+        if (settingsBack) { settingsClassId = ''; renderManageDialog(); return; }
         const manage = event.target.closest('[data-manage-class]');
         if (manage) { selectManageClass(manage.dataset.manageClass); }
       });
