@@ -640,6 +640,36 @@
       .form-grid { grid-template-columns: 1fr; }
       .form-grid .full { grid-column: auto; }
     }
+    .turn-launcher { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 17px 18px 18px; padding: 16px; border: 3px solid var(--ink); border-radius: 15px; background: #fffdf3; box-shadow: 3px 4px 0 var(--ink), 6px 7px 0 rgba(242,111,164,.38); }
+    .turn-launcher-copy { display: grid; gap: 4px; min-width: 0; }
+    .turn-launcher-kicker, .turn-step { margin: 0; color: var(--ink); font-family: "Courier New", monospace; font-size: 11px; font-weight: 1000; letter-spacing: .1em; text-transform: uppercase; }
+    .turn-launcher-copy p { margin: 0; color: var(--ink); font-size: 15px; font-weight: 800; line-height: 1.35; }
+    .turn-wizard { width: min(620px, calc(100% - 24px)); max-height: min(720px, calc(100dvh - 24px)); }
+    .turn-wizard-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px 22px 15px; border-bottom: 4px solid var(--ink); background: linear-gradient(100deg, #5daee0 0 50%, #83d1ec 50% 100%); }
+    .turn-wizard-head h2 { margin: 5px 0 0; color: #fffdf3; font-family: "Comic Sans MS", "Trebuchet MS", sans-serif; font-size: clamp(25px, 6vw, 34px); line-height: 1.05; text-shadow: 2px 2px 0 #e84b83, 4px 4px 0 var(--ink); }
+    .turn-wizard-head .turn-step { color: var(--ink); text-shadow: 1px 1px 0 #fffdf3; }
+    .turn-wizard-body { padding: 20px 22px 22px; overflow-y: auto; }
+    .turn-screen[hidden] { display: none; }
+    .turn-wizard-intro { margin: 0 0 16px; color: var(--ink); font-size: 17px; font-weight: 850; line-height: 1.4; }
+    .wizard-athletes { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 11px; }
+    .wizard-athlete { min-height: 66px; padding: 9px 12px; border: 3px solid var(--ink); border-radius: 13px; color: var(--ink); background: #fffdf3; box-shadow: 2px 3px 0 var(--ink), 4px 5px 0 #ffcc4d; font-size: 15px; font-weight: 1000; line-height: 1.2; }
+    .wizard-athlete:hover { background: var(--tap-color, #ffe68c); transform: translate(-1px, -1px); box-shadow: 3px 4px 0 var(--ink), 5px 6px 0 #f26fa4; }
+    .turn-number-label { display: grid; gap: 8px; color: var(--ink); font-family: "Courier New", monospace; font-size: 12px; font-weight: 1000; letter-spacing: .06em; text-transform: uppercase; }
+    .turn-number-input { width: 100%; min-height: 70px; padding: 10px 14px; border: 4px solid var(--ink); border-radius: 15px; color: #e84b83; background: #fffdf3; box-shadow: inset 0 2px 0 #ffe6ae, 3px 4px 0 rgba(38,58,112,.28); font-family: "Arial Rounded MT Bold", "Comic Sans MS", sans-serif; font-size: 37px; font-weight: 1000; text-align: center; }
+    .turn-input-message { min-height: 20px; margin: 9px 0 0; color: #c33655; font-size: 13px; font-weight: 850; }
+    .wizard-pin-pad { width: min(320px, 100%); margin: 18px auto 0; }
+    .wizard-pin-pad .pin-key { min-height: 50px; }
+    .wizard-pin-pad .pin-key[data-turn-pad="clear"] { color: #fff; background: linear-gradient(145deg, #ffa3c5, #e84b83); }
+    .wizard-pin-pad .pin-key[data-turn-pad="back"] { color: #fff; background: linear-gradient(145deg, #9de1bb, #50aa7d); }
+    .turn-wizard-actions { display: flex; gap: 10px; margin-top: 18px; }
+    .turn-wizard-actions .button { flex: 1; }
+    .turn-wizard .button:disabled { cursor: not-allowed; opacity: .55; transform: none; box-shadow: 2px 3px 0 var(--ink); }
+    .turn-result { display: grid; justify-items: center; gap: 9px; padding: 20px 14px 4px; text-align: center; }
+    .turn-result-kicker { color: var(--ink); font-family: "Courier New", monospace; font-size: 12px; font-weight: 1000; letter-spacing: .09em; text-transform: uppercase; }
+    .turn-result-count { display: grid; place-items: center; min-width: 150px; min-height: 132px; padding: 12px 18px; border: 5px solid var(--ink); border-radius: 24px; color: #e84b83; background: #fffdf3; box-shadow: inset 0 0 0 5px #ffe68c, 4px 5px 0 var(--ink), 9px 10px 0 #f26fa4; font-family: "Arial Rounded MT Bold", "Comic Sans MS", sans-serif; font-size: 82px; font-weight: 1000; line-height: .8; text-shadow: 2px 2px 0 #ffcc4d; }
+    .turn-result-word { color: var(--ink); font-family: "Comic Sans MS", "Trebuchet MS", sans-serif; font-size: 29px; font-weight: 1000; text-shadow: 1px 1px 0 #fffdf3; }
+    .turn-result-copy { margin: 6px 0 0; color: var(--ink); font-size: 17px; font-weight: 850; line-height: 1.4; }
+    @media (max-width: 560px) { .turn-launcher { align-items: stretch; flex-direction: column; } .turn-wizard-head, .turn-wizard-body { padding-left: 16px; padding-right: 16px; } .wizard-athletes { grid-template-columns: 1fr; } .turn-wizard-actions { flex-direction: column-reverse; } .turn-number-input { font-size: 33px; } }
   </style>
   <!-- Gymnastics Vault icon -->
   <link rel="icon" type="image/png" href="icon.png">
@@ -657,7 +687,7 @@
       </div>
       <div class="header-actions">
         <button class="button light small" id="soundToggleButton" type="button" aria-pressed="true">Sounds: On</button>
-        <button class="button light small" id="manageButton" type="button">Manage classes</button>
+        <button class="button light small" id="manageButton" type="button">Settings</button>
       </div>
     </header>
 
@@ -671,35 +701,31 @@
     <section class="dashboard compact-dashboard">
       <article class="card quick-panel">
         <div class="panel-heading">
-          <div><h2>How many cards?</h2><p>Enter circles, then tap the athlete.</p></div>
+          <div><h2>Cards, one kid at a time</h2><p>Pick the kid first, then enter their circles.</p></div>
           <span class="pill" id="boardClassPill">Class</span>
         </div>
-        <div class="quick-form quick-form-hidden">
-          <select id="awardAthlete" aria-label="Selected athlete"></select>
+        <div class="turn-launcher">
+          <div class="turn-launcher-copy"><span class="turn-launcher-kicker">Turn helper</span><p>Pick a kid, enter their circles, and see their cards.</p></div>
+          <button class="button pink" id="openTurnFlowButton" type="button">New turn</button>
         </div>
-        <div class="rapid-workflow">
-          <p class="rapid-prompt">1. Type their circles</p>
-          <div class="rapid-entry"><span>They did</span><output class="pad-display" id="padDisplay" aria-live="polite">1</output><span>circles</span></div>
-          <input id="awardAmount" type="hidden" value="1">
-          <div class="pin-pad" aria-label="Circle number keypad">
-            <button class="pin-key" type="button" data-pad="1">1</button><button class="pin-key" type="button" data-pad="2">2</button><button class="pin-key" type="button" data-pad="3">3</button>
-            <button class="pin-key" type="button" data-pad="4">4</button><button class="pin-key" type="button" data-pad="5">5</button><button class="pin-key" type="button" data-pad="6">6</button>
-            <button class="pin-key" type="button" data-pad="7">7</button><button class="pin-key" type="button" data-pad="8">8</button><button class="pin-key" type="button" data-pad="9">9</button>
-            <button class="pin-key" type="button" data-pad="clear">C</button><button class="pin-key" type="button" data-pad="0">0</button><button class="pin-key" type="button" data-pad="back">⌫</button>
-            <button class="pin-key" type="button" data-pad=".25">¼</button><button class="pin-key" type="button" data-pad=".5">½</button><button class="pin-key" type="button" data-pad=".75">¾</button>
-          </div>
-          <p class="tap-instruction">2. Tap their name</p>
-          <div class="tap-athletes" id="rapidAthletes" aria-label="Tap an athlete to calculate cards"></div>
-          <div class="award-preview" aria-live="polite">
-            <span class="award-label">They get</span>
-            <output class="award-count" id="awardCount">0</output>
-            <span class="award-label">cards</span>
-          </div>
-        </div>
-        <div class="goal-strip"><span>Goals</span><div id="expectationGarden" aria-label="Editable athlete card goals"></div></div>
       </article>
     </section>
   </main>
+
+  <dialog id="turnFlowDialog" class="turn-wizard" aria-labelledby="turnDialogTitle">
+    <div class="turn-wizard-head"><div><p class="turn-step" id="turnStepLabel">Step 1 of 3</p><h2 id="turnDialogTitle" tabindex="-1">Pick the current kid</h2></div><button class="icon-button" id="closeTurnFlowButton" type="button" aria-label="Close turn helper">×</button></div>
+    <div class="turn-wizard-body">
+      <section class="turn-screen" id="turnPickScreen"><p class="turn-wizard-intro">Who just finished their turn?</p><div class="wizard-athletes" id="turnAthletes" aria-label="Pick the current kid"></div></section>
+      <form class="turn-screen" id="turnCircleForm" novalidate hidden>
+        <p class="turn-wizard-intro">How many circles did <strong id="turnAthleteName">this kid</strong> do?</p>
+        <label class="turn-number-label" for="turnCircleAmount">Circles completed<input class="turn-number-input" id="turnCircleAmount" type="text" readonly aria-describedby="turnInputMessage" aria-label="Circles completed; use the keypad" placeholder="0"></label>
+        <p class="turn-input-message" id="turnInputMessage" aria-live="polite"></p>
+        <div class="pin-pad wizard-pin-pad" aria-label="Circle number keypad"><button class="pin-key" type="button" data-turn-pad="1">1</button><button class="pin-key" type="button" data-turn-pad="2">2</button><button class="pin-key" type="button" data-turn-pad="3">3</button><button class="pin-key" type="button" data-turn-pad="4">4</button><button class="pin-key" type="button" data-turn-pad="5">5</button><button class="pin-key" type="button" data-turn-pad="6">6</button><button class="pin-key" type="button" data-turn-pad="7">7</button><button class="pin-key" type="button" data-turn-pad="8">8</button><button class="pin-key" type="button" data-turn-pad="9">9</button><button class="pin-key" type="button" data-turn-pad="clear">C</button><button class="pin-key" type="button" data-turn-pad="0">0</button><button class="pin-key" type="button" data-turn-pad="back" aria-label="Backspace">⌫</button></div>
+        <div class="turn-wizard-actions"><button class="button light" id="changeTurnAthleteButton" type="button">Change kid</button><button class="button pink" id="showCardsButton" type="submit" disabled>Show cards</button></div>
+      </form>
+      <section class="turn-screen" id="turnResultScreen" aria-live="polite" hidden><div class="turn-result"><span class="turn-result-kicker" id="turnResultKicker">Card result</span><output class="turn-result-count" id="turnResultCount">0</output><span class="turn-result-word" id="turnResultWord">cards</span><p class="turn-result-copy" id="turnResultSummary"></p></div><div class="turn-wizard-actions"><button class="button light" id="editTurnAmountButton" type="button">Edit circles</button><button class="button pink" id="nextKidButton" type="button">Next kid</button></div></section>
+    </div>
+  </dialog>
 
   <dialog id="classDialog">
     <div class="modal-head"><div><h2>New class</h2></div><button class="icon-button" data-close="classDialog" aria-label="Close">×</button></div>
@@ -850,6 +876,9 @@
       let toastTimer;
       let soundEnabled = localStorage.getItem(SOUND_KEY) !== 'off';
       let audioContext;
+      let selectedTurnAthleteId = '';
+      let lastTurn = null;
+      let turnStep = 'pick';
 
       function updateSoundToggle() {
         const button = el('#soundToggleButton');
@@ -947,9 +976,8 @@
       function renderAll() {
         const group = currentClass();
         renderClassSelect();
-        renderGarden(group);
-        renderAwardControls(group);
-        renderRapidAthletes(group);
+        renderTurnLauncher(group);
+        renderTurnAthletes(group);
         el('#boardClassPill').textContent = group.label || group.name;
       }
       function renderClassSelect() {
@@ -1010,6 +1038,94 @@
         const result = calculateCards(athlete, el('#awardAmount').value);
         el('#awardCount').textContent = result.cards;
       }
+      function renderTurnLauncher(group = currentClass()) {
+        const button = el('#openTurnFlowButton');
+        const hasAthletes = group.athletes.length > 0;
+        button.disabled = !hasAthletes;
+        button.textContent = hasAthletes ? 'New turn' : 'Add an athlete first';
+      }
+      function renderTurnAthletes(group) {
+        el('#turnAthletes').innerHTML = group.athletes.length
+          ? group.athletes.map((athlete, index) => `<button class="wizard-athlete" type="button" data-turn-athlete="${athlete.id}" style="--tap-color:${COLORS[index % COLORS.length]}">${safeText(athlete.name)}</button>`).join('')
+          : '<span class="tiny-note">Add an athlete in Settings to start a turn.</span>';
+      }
+      function setTurnStep(step) {
+        const athlete = athleteById(selectedTurnAthleteId);
+        if ((step === 'amount' || step === 'result') && !athlete) step = 'pick';
+        if (step === 'result' && !lastTurn) step = 'pick';
+        turnStep = step;
+        el('#turnPickScreen').hidden = step !== 'pick';
+        el('#turnCircleForm').hidden = step !== 'amount';
+        el('#turnResultScreen').hidden = step !== 'result';
+        if (step === 'pick') {
+          el('#turnStepLabel').textContent = 'Step 1 of 3';
+          el('#turnDialogTitle').textContent = 'Pick the current kid';
+          renderTurnAthletes(currentClass());
+        } else if (step === 'amount') {
+          el('#turnStepLabel').textContent = 'Step 2 of 3';
+          el('#turnDialogTitle').textContent = 'How many circles?';
+          el('#turnAthleteName').textContent = athlete.name.split(' ')[0];
+          updateTurnAmount();
+        } else {
+          el('#turnStepLabel').textContent = 'Step 3 of 3';
+          el('#turnDialogTitle').textContent = 'Cards earned';
+          el('#turnResultKicker').textContent = `${lastTurn.name} gets`;
+          el('#turnResultCount').textContent = lastTurn.cards;
+          el('#turnResultWord').textContent = lastTurn.cards === 1 ? 'card' : 'cards';
+          el('#turnResultSummary').textContent = `${lastTurn.name} did ${formatCircles(lastTurn.work)}.`;
+        }
+      }
+      function openTurnWizard() {
+        if (!currentClass().athletes.length) { toast('Add an athlete in Settings to start a turn.'); playSound('error'); return; }
+        const dialog = el('#turnFlowDialog');
+        if (!dialog.open) dialog.showModal();
+        setTurnStep(selectedTurnAthleteId && athleteById(selectedTurnAthleteId) ? turnStep : 'pick');
+      }
+      function resetTurn() {
+        selectedTurnAthleteId = '';
+        lastTurn = null;
+        turnStep = 'pick';
+        el('#turnCircleAmount').value = '';
+        el('#turnInputMessage').textContent = '';
+        setTurnStep('pick');
+      }
+      function selectTurnAthlete(athleteId) {
+        selectedTurnAthleteId = athleteId;
+        lastTurn = null;
+        el('#turnCircleAmount').value = '';
+        el('#turnInputMessage').textContent = '';
+        setTurnStep('amount');
+      }
+      function turnAmountValue() {
+        const raw = el('#turnCircleAmount').value.trim();
+        const amount = cleanNumber(raw, NaN);
+        return raw && Number.isInteger(amount) && amount >= 0 ? amount : null;
+      }
+      function updateTurnAmount() {
+        const amount = turnAmountValue();
+        el('#showCardsButton').disabled = amount === null;
+        el('#turnInputMessage').textContent = el('#turnCircleAmount').value && amount === null ? 'Enter a whole circle number.' : '';
+      }
+      function pressTurnPad(key) {
+        const input = el('#turnCircleAmount');
+        let value = input.value || '';
+        if (key === 'clear') value = '';
+        else if (key === 'back') value = value.slice(0, -1);
+        else if (!value || value === '0') value = key;
+        else if (value.length < 5) value += key;
+        input.value = value;
+        updateTurnAmount();
+      }
+      function showTurnResult(event) {
+        event.preventDefault();
+        const athlete = athleteById(selectedTurnAthleteId);
+        const amount = turnAmountValue();
+        if (!athlete || amount === null) { updateTurnAmount(); return; }
+        const result = calculateCards(athlete, amount);
+        lastTurn = { name: athlete.name, work: result.work, cards: result.cards };
+        setTurnStep('result');
+      }
+      function closeTurnWizard() { el('#turnFlowDialog').close(); }
       function openClassDialog() { el('#classForm').reset(); el('#classDialog').showModal(); }
       function createClass(event) {
         event.preventDefault();
@@ -1018,6 +1134,7 @@
         const group = { id: id('class'), name, label: el('#newClassCode').value.trim() || name.slice(0, 10), rulesKind: 'circle', rules: [], athletes: [] };
         state.classes.push(group);
         state.selectedClassId = group.id;
+        resetTurn();
         saveState(`Created ${name}.`);
         el('#classDialog').close();
         renderAll();
@@ -1029,6 +1146,7 @@
       function openManageDialog() { renderManageDialog(); el('#manageDialog').showModal(); }
       function selectManageClass(classId) {
         state.selectedClassId = classId;
+        resetTurn();
         saveState();
         el('#manageDialog').close();
         renderAll();
@@ -1091,18 +1209,24 @@
         reader.readAsText(file);
       }
 
-      el('#classSelect').addEventListener('change', (event) => { state.selectedClassId = event.target.value; saveState(); renderAll(); playSound('chime'); });
+      el('#classSelect').addEventListener('change', (event) => { state.selectedClassId = event.target.value; resetTurn(); saveState(); renderAll(); playSound('chime'); });
       el('#soundToggleButton').addEventListener('click', toggleSounds);
       el('#addClassButton').addEventListener('click', openClassDialog);
       el('#manageButton').addEventListener('click', openManageDialog);
-      el('#awardAmount').addEventListener('input', renderAwardPreview);
+      el('#openTurnFlowButton').addEventListener('click', openTurnWizard);
+      el('#closeTurnFlowButton').addEventListener('click', closeTurnWizard);
+      el('#turnFlowDialog').addEventListener('close', resetTurn);
+      el('#turnCircleForm').addEventListener('submit', showTurnResult);
+      el('#changeTurnAthleteButton').addEventListener('click', resetTurn);
+      el('#editTurnAmountButton').addEventListener('click', () => setTurnStep('amount'));
+      el('#nextKidButton').addEventListener('click', resetTurn);
       el('#classForm').addEventListener('submit', createClass);
       el('#athleteForm').addEventListener('submit', saveAthlete);
       document.addEventListener('click', (event) => {
         const button = event.target.closest('button');
         if (button && !button.disabled && button.id !== 'soundToggleButton') {
-          const sound = button.dataset.pad ? 'tap'
-            : button.dataset.rapidAthlete ? 'sparkle'
+          const sound = button.dataset.pad || button.dataset.turnPad ? 'tap'
+            : button.dataset.rapidAthlete || button.dataset.turnAthlete ? 'sparkle'
             : button.dataset.close ? 'boop'
             : button.type === 'submit' ? 'sparkle'
             : 'tap';
@@ -1110,6 +1234,10 @@
         }
         const close = event.target.closest('[data-close]');
         if (close) { el(`#${close.dataset.close}`).close(); return; }
+        const turnPad = event.target.closest('[data-turn-pad]');
+        if (turnPad) { pressTurnPad(turnPad.dataset.turnPad); return; }
+        const turnAthlete = event.target.closest('[data-turn-athlete]');
+        if (turnAthlete) { selectTurnAthlete(turnAthlete.dataset.turnAthlete); return; }
         const pad = event.target.closest('[data-pad]');
         if (pad) { pressPad(pad.dataset.pad); return; }
         const expectation = event.target.closest('[data-athlete-expectation]');
@@ -1124,6 +1252,7 @@
 
       updateSoundToggle();
       renderAll();
+      requestAnimationFrame(openTurnWizard);
     })();
   </script>
 </body>
