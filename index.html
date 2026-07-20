@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
   <meta name="theme-color" content="#d7c487">
   <title>Candy Circle Cards</title>
   <style>
@@ -656,6 +656,7 @@
         <p class="subtitle">Tap in circles. Tap a name. Hand them their cards.</p>
       </div>
       <div class="header-actions">
+        <button class="button light small" id="soundToggleButton" type="button" aria-pressed="true">Sounds: On</button>
         <button class="button light small" id="manageButton" type="button">Manage classes</button>
       </div>
     </header>
@@ -734,7 +735,22 @@
   <script>
     (() => {
       'use strict';
+      const stopZoom = (event) => event.preventDefault();
+      document.addEventListener('gesturestart', stopZoom, { passive: false });
+      document.addEventListener('gesturechange', stopZoom, { passive: false });
+      document.addEventListener('gestureend', stopZoom, { passive: false });
+      document.addEventListener('dblclick', stopZoom, { passive: false });
+      document.addEventListener('touchmove', (event) => {
+        if (event.touches.length > 1) event.preventDefault();
+      }, { passive: false });
+      document.addEventListener('wheel', (event) => {
+        if (event.ctrlKey || event.metaKey) event.preventDefault();
+      }, { passive: false });
+      document.addEventListener('keydown', (event) => {
+        if ((event.ctrlKey || event.metaKey) && ['+', '-', '=', '0'].includes(event.key)) event.preventDefault();
+      });
       const STORAGE_KEY = 'candy-circle-quest-v1';
+      const SOUND_KEY = 'candy-circle-quest-sound-enabled';
       const COLORS = ['#e94c46', '#72bde8', '#6cc992', '#8d65c7', '#f56ea6', '#ffb54e'];
 
       const id = (prefix = 'id') => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
@@ -832,6 +848,47 @@
       const els = (selector) => [...document.querySelectorAll(selector)];
       let state = loadState();
       let toastTimer;
+      let soundEnabled = localStorage.getItem(SOUND_KEY) !== 'off';
+      let audioContext;
+
+      function updateSoundToggle() {
+        const button = el('#soundToggleButton');
+        button.textContent = `Sounds: ${soundEnabled ? 'On' : 'Off'}`;
+        button.setAttribute('aria-pressed', String(soundEnabled));
+      }
+      function playSound(kind = 'tap') {
+        const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+        if (!soundEnabled || !AudioContextCtor) return;
+        audioContext ||= new AudioContextCtor();
+        if (audioContext.state === 'suspended') audioContext.resume();
+        const now = audioContext.currentTime;
+        const notes = {
+          tap: [[523.25, 0], [659.25, .055]],
+          boop: [[392, 0], [329.63, .07]],
+          sparkle: [[659.25, 0], [783.99, .06], [1046.5, .12]],
+          chime: [[440, 0], [554.37, .08], [659.25, .16]],
+          error: [[220, 0], [174.61, .1]]
+        }[kind] || [[523.25, 0]];
+        notes.forEach(([frequency, offset]) => {
+          const oscillator = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+          oscillator.type = kind === 'error' ? 'triangle' : 'sine';
+          oscillator.frequency.setValueAtTime(frequency, now + offset);
+          gain.gain.setValueAtTime(.0001, now + offset);
+          gain.gain.exponentialRampToValueAtTime(kind === 'sparkle' ? .075 : .055, now + offset + .012);
+          gain.gain.exponentialRampToValueAtTime(.0001, now + offset + .15);
+          oscillator.connect(gain).connect(audioContext.destination);
+          oscillator.start(now + offset);
+          oscillator.stop(now + offset + .17);
+        });
+      }
+      function toggleSounds() {
+        const wasEnabled = soundEnabled;
+        soundEnabled = !soundEnabled;
+        localStorage.setItem(SOUND_KEY, soundEnabled ? 'on' : 'off');
+        updateSoundToggle();
+        if (!wasEnabled) playSound('chime');
+      }
 
       function loadState() {
         try {
@@ -1028,19 +1085,29 @@
             state = normalizeState(imported);
             saveState('Backup imported.');
             renderAll();
-          } catch (error) { toast('That file is not a Candy Circle Quest backup.'); }
+          } catch (error) { toast('That file is not a Candy Circle Quest backup.'); playSound('error'); }
           event.target.value = '';
         };
         reader.readAsText(file);
       }
 
-      el('#classSelect').addEventListener('change', (event) => { state.selectedClassId = event.target.value; saveState(); renderAll(); });
+      el('#classSelect').addEventListener('change', (event) => { state.selectedClassId = event.target.value; saveState(); renderAll(); playSound('chime'); });
+      el('#soundToggleButton').addEventListener('click', toggleSounds);
       el('#addClassButton').addEventListener('click', openClassDialog);
       el('#manageButton').addEventListener('click', openManageDialog);
       el('#awardAmount').addEventListener('input', renderAwardPreview);
       el('#classForm').addEventListener('submit', createClass);
       el('#athleteForm').addEventListener('submit', saveAthlete);
       document.addEventListener('click', (event) => {
+        const button = event.target.closest('button');
+        if (button && !button.disabled && button.id !== 'soundToggleButton') {
+          const sound = button.dataset.pad ? 'tap'
+            : button.dataset.rapidAthlete ? 'sparkle'
+            : button.dataset.close ? 'boop'
+            : button.type === 'submit' ? 'sparkle'
+            : 'tap';
+          playSound(sound);
+        }
         const close = event.target.closest('[data-close]');
         if (close) { el(`#${close.dataset.close}`).close(); return; }
         const pad = event.target.closest('[data-pad]');
@@ -1055,6 +1122,7 @@
         if (manage) { selectManageClass(manage.dataset.manageClass); }
       });
 
+      updateSoundToggle();
       renderAll();
     })();
   </script>
