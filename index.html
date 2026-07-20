@@ -671,6 +671,19 @@
     .turn-result-word { color: var(--ink); font-family: "Comic Sans MS", "Trebuchet MS", sans-serif; font-size: 29px; font-weight: 1000; text-shadow: 1px 1px 0 #fffdf3; }
     .turn-result-copy { margin: 6px 0 0; color: var(--ink); font-size: 17px; font-weight: 850; line-height: 1.4; }
     @media (max-width: 560px) { .turn-launcher { align-items: stretch; flex-direction: column; } .turn-wizard-head, .turn-wizard-body { padding-left: 16px; padding-right: 16px; } .wizard-athletes { grid-template-columns: 1fr; } .turn-wizard-actions { flex-direction: column-reverse; } .turn-number-input { font-size: 33px; } }
+    @media (max-height: 760px) {
+      .turn-wizard { max-height: calc(100dvh - 8px); }
+      .turn-wizard-head { padding: 10px 16px 8px; border-bottom-width: 3px; }
+      .turn-wizard-head h2 { margin-top: 2px; font-size: 25px; }
+      .turn-wizard-body { padding: 10px 16px 12px; overflow-y: hidden; }
+      .turn-wizard-intro { margin-bottom: 8px; font-size: 15px; }
+      .turn-number-label { gap: 4px; }
+      .turn-number-input { min-height: 56px; padding: 6px 10px; font-size: 31px; }
+      .turn-input-message { min-height: 16px; margin: 4px 0 0; font-size: 12px; }
+      .wizard-pin-pad { margin-top: 6px; padding: 6px; gap: 4px; }
+      .wizard-pin-pad .pin-key { min-height: 40px; }
+      .turn-wizard-actions { margin-top: 10px; }
+    }
   </style>
   <!-- Gymnastics Vault icon -->
   <link rel="icon" type="image/png" href="icon.png">
