@@ -815,7 +815,7 @@
     <div class="modal-head"><div><h2>Edit saved turn</h2></div><button class="icon-button" data-close="editRecordDialog" aria-label="Close">×</button></div>
     <form class="modal-body" id="editRecordForm">
       <input id="editRecordId" type="hidden">
-      <div class="form-grid"><div class="field full"><label for="editRecordAthlete">Student<select id="editRecordAthlete" required></select></label></div><div class="field"><label for="editRecordTime">Date and time<input id="editRecordTime" type="datetime-local" required></label></div><div class="field"><label for="editRecordCircles">Circles<input id="editRecordCircles" type="number" min="0" step="0.25" required></label></div></div>
+      <div class="form-grid"><div class="field full"><label for="editRecordAthlete">Student<select id="editRecordAthlete" required></select></label></div><div class="field"><label for="editRecordTime">Date and time<input id="editRecordTime" type="datetime-local" required></label></div><div class="field"><label for="editRecordCircles">Circles<input id="editRecordCircles" type="number" min="0" step="0.125" required></label></div></div>
       <p class="data-manager-intro">Cards update from this student’s current goal when you save.</p>
       <div class="modal-actions"><button class="button light" type="button" data-close="editRecordDialog">Cancel</button><button class="button pink" type="submit">Save turn</button></div>
     </form>
@@ -828,8 +828,8 @@
       <input id="editAthleteId" type="hidden">
       <div class="form-grid">
         <div class="field full"><label for="athleteName">Athlete name</label><input id="athleteName" required maxlength="80" placeholder="Name"></div>
-        <div class="field"><label for="circleGoal">First card: base circles</label><input id="circleGoal" type="number" min="0.25" step="0.25" required value="1"></div>
-        <div class="field"><label for="incrementGoal">Each extra card: + circles</label><input id="incrementGoal" type="number" min="0.25" step="0.25" required value="0.25"></div>
+        <div class="field"><label for="circleGoal">First card: base circles</label><input id="circleGoal" type="number" min="0.125" step="0.125" required value="1"></div>
+        <div class="field"><label for="incrementGoal">Each extra card: + circles</label><input id="incrementGoal" type="number" min="0.125" step="0.125" required value="0.25"></div>
         <div class="field full"><label for="athleteNotes">Tiny coach note (optional)</label><textarea id="athleteNotes" maxlength="300" placeholder="e.g. Keep legs together."></textarea></div>
       </div>
       <div class="modal-actions"><button class="button light" type="button" data-close="athleteDialog">Cancel</button><button class="button pink" type="submit">Save athlete</button></div>
@@ -1013,8 +1013,8 @@
         candidate.classes.forEach((group) => {
           group.athletes = Array.isArray(group.athletes) ? group.athletes : [];
           group.athletes.forEach((athlete) => {
-            athlete.circleGoal = Math.max(.25, cleanNumber(athlete.circleGoal, athlete.firstGoal || 1));
-            athlete.incrementGoal = Math.max(.25, cleanNumber(athlete.incrementGoal, athlete.repeatGoal || athlete.circleGoal));
+            athlete.circleGoal = Math.max(.125, cleanNumber(athlete.circleGoal, athlete.firstGoal || 1));
+            athlete.incrementGoal = Math.max(.125, cleanNumber(athlete.incrementGoal, athlete.repeatGoal || athlete.circleGoal));
           });
         });
         return candidate;
@@ -1055,10 +1055,10 @@
         return state.classes.find((item) => item.id === classId)?.athletes.find((athlete) => athlete.id === athleteId);
       }
       function currentCircleGoal(athlete) {
-        return Math.max(.25, cleanNumber(athlete.circleGoal, athlete.firstGoal || 1));
+        return Math.max(.125, cleanNumber(athlete.circleGoal, athlete.firstGoal || 1));
       }
       function currentIncrementGoal(athlete) {
-        return Math.max(.25, cleanNumber(athlete.incrementGoal, athlete.repeatGoal || currentCircleGoal(athlete)));
+        return Math.max(.125, cleanNumber(athlete.incrementGoal, athlete.repeatGoal || currentCircleGoal(athlete)));
       }
       function calculateCards(athlete, amount) {
         const work = Math.max(0, cleanNumber(amount));
@@ -1440,8 +1440,8 @@
         const existing = athleteId ? athleteById(athleteId) : null;
         const athlete = existing || seedAthlete(el('#athleteName').value.trim(), 1);
         athlete.name = el('#athleteName').value.trim();
-        athlete.circleGoal = Math.max(.25, cleanNumber(el('#circleGoal').value, 1));
-        athlete.incrementGoal = Math.max(.25, cleanNumber(el('#incrementGoal').value, .25));
+        athlete.circleGoal = Math.max(.125, cleanNumber(el('#circleGoal').value, 1));
+        athlete.incrementGoal = Math.max(.125, cleanNumber(el('#incrementGoal').value, .25));
         athlete.firstGoal = athlete.circleGoal;
         athlete.repeatGoal = athlete.incrementGoal;
         athlete.notes = el('#athleteNotes').value.trim();
