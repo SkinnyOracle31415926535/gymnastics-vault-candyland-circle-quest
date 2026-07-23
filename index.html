@@ -648,6 +648,7 @@
     .class-list .turn-launcher { margin: 0; }
     .class-launcher-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
     .class-launcher-info .pill { min-width: 42px; justify-content: center; }
+    .class-launcher .turn-launcher-kicker { font-size: 18px; line-height: 1.15; }
     .class-launcher-actions { display: flex; align-items: center; gap: 8px; }
     .classes-footer { display: flex; align-items: center; gap: 12px; padding: 14px 4px 0; }
     .classes-footer .save-note { margin-left: auto; }
@@ -1229,7 +1230,7 @@
         el('#classList').innerHTML = state.classes.map((group) => {
           const athleteCount = group.athletes.length;
           const playDisabled = athleteCount ? '' : ' disabled title="Use Edit to add a kid first."';
-          return `<div class="turn-launcher class-launcher"><div class="class-launcher-info"><span class="pill">${safeText(group.label || group.name)}</span><div class="turn-launcher-copy"><span class="turn-launcher-kicker">${safeText(group.name)}</span><p>${athleteCount} kid${athleteCount === 1 ? '' : 's'} · Pick a kid, enter their circles, and see their cards.</p></div></div><div class="class-launcher-actions"><button class="button light small" type="button" data-edit-class="${safeText(group.id)}">Edit</button><button class="button pink small" type="button" data-play-class="${safeText(group.id)}"${playDisabled}>Play</button></div></div>`;
+          return `<div class="turn-launcher class-launcher"><div class="class-launcher-info"><span class="pill">${safeText(group.label || group.name)}</span><div class="turn-launcher-copy"><span class="turn-launcher-kicker">${safeText(group.name)}</span></div></div><div class="class-launcher-actions"><button class="button light small" type="button" data-edit-class="${safeText(group.id)}">Edit</button><button class="button pink small" type="button" data-play-class="${safeText(group.id)}"${playDisabled}>Play</button></div></div>`;
         }).join('');
       }
       function renderGarden(group) {
