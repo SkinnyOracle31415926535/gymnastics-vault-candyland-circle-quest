@@ -644,6 +644,13 @@
     .turn-launcher-copy { display: grid; gap: 4px; min-width: 0; }
     .turn-launcher-kicker, .turn-step { margin: 0; color: var(--ink); font-family: "Courier New", monospace; font-size: 11px; font-weight: 1000; letter-spacing: .1em; text-transform: uppercase; }
     .turn-launcher-copy p { margin: 0; color: var(--ink); font-size: 15px; font-weight: 800; line-height: 1.35; }
+    .class-list { display: grid; gap: 14px; padding: 0 18px 18px; }
+    .class-list .turn-launcher { margin: 0; }
+    .class-launcher-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .class-launcher-info .pill { min-width: 42px; justify-content: center; }
+    .class-launcher-actions { display: flex; align-items: center; gap: 8px; }
+    .classes-footer { display: flex; align-items: center; gap: 12px; padding: 14px 4px 0; }
+    .classes-footer .save-note { margin-left: auto; }
     .turn-wizard { width: min(620px, calc(100% - 24px)); max-height: min(720px, calc(100dvh - 24px)); }
     .turn-wizard-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px 22px 15px; border-bottom: 4px solid var(--ink); background: linear-gradient(100deg, #5daee0 0 50%, #83d1ec 50% 100%); }
     .turn-wizard-head h2 { margin: 5px 0 0; color: #fffdf3; font-family: "Comic Sans MS", "Trebuchet MS", sans-serif; font-size: clamp(25px, 6vw, 34px); line-height: 1.05; text-shadow: 2px 2px 0 #e84b83, 4px 4px 0 var(--ink); }
@@ -670,7 +677,7 @@
     .turn-result-count { display: grid; place-items: center; min-width: 150px; min-height: 132px; padding: 12px 18px; border: 5px solid var(--ink); border-radius: 24px; color: #e84b83; background: #fffdf3; box-shadow: inset 0 0 0 5px #ffe68c, 4px 5px 0 var(--ink), 9px 10px 0 #f26fa4; font-family: "Arial Rounded MT Bold", "Comic Sans MS", sans-serif; font-size: 82px; font-weight: 1000; line-height: .8; text-shadow: 2px 2px 0 #ffcc4d; }
     .turn-result-word { color: var(--ink); font-family: "Comic Sans MS", "Trebuchet MS", sans-serif; font-size: 29px; font-weight: 1000; text-shadow: 1px 1px 0 #fffdf3; }
     .turn-result-copy { margin: 6px 0 0; color: var(--ink); font-size: 17px; font-weight: 850; line-height: 1.4; }
-    @media (max-width: 560px) { .turn-launcher { align-items: stretch; flex-direction: column; } .turn-wizard-head, .turn-wizard-body { padding-left: 16px; padding-right: 16px; } .wizard-athletes { grid-template-columns: 1fr; } .turn-wizard-actions { flex-direction: column-reverse; } .turn-number-input { font-size: 33px; } }
+    @media (max-width: 560px) { .turn-launcher { align-items: stretch; flex-direction: column; } .class-launcher-actions { display: grid; grid-template-columns: 1fr 1fr; } .classes-footer { align-items: stretch; flex-direction: column; } .classes-footer .save-note { margin-left: 0; } .turn-wizard-head, .turn-wizard-body { padding-left: 16px; padding-right: 16px; } .wizard-athletes { grid-template-columns: 1fr; } .turn-wizard-actions { flex-direction: column-reverse; } .turn-number-input { font-size: 33px; } }
     @media (max-height: 760px) {
       .turn-wizard { max-height: calc(100dvh - 8px); }
       .turn-wizard-head { padding: 10px 16px 8px; border-bottom-width: 3px; }
@@ -738,28 +745,20 @@
       <div class="header-actions">
         <button class="button light small" id="soundToggleButton" type="button" aria-pressed="true">Sounds: On</button>
         <button class="button light small" id="reportsButton" type="button">Reports</button>
-        <button class="button light small" id="manageButton" type="button">Settings</button>
       </div>
     </header>
-
-    <section class="classbar" aria-label="Class controls">
-      <label for="classSelect">Class playing now</label>
-      <select id="classSelect"></select>
-      <button class="button light small" id="addClassButton" type="button">+ Class</button>
-      <span class="save-note" id="saveNote">Goals save on this device</span>
-    </section>
 
     <section class="dashboard compact-dashboard">
       <article class="card quick-panel">
         <div class="panel-heading">
-          <div><h2>Cards, one kid at a time</h2><p>Pick the kid first, then enter their circles.</p></div>
-          <span class="pill" id="boardClassPill">Class</span>
+          <div><h2>Classes</h2><p>Choose a class to edit goals or play.</p></div>
         </div>
-        <div class="turn-launcher">
-          <div class="turn-launcher-copy"><span class="turn-launcher-kicker">Turn helper</span><p>Pick a kid, enter their circles, and see their cards.</p></div>
-          <button class="button pink" id="openTurnFlowButton" type="button">New turn</button>
-        </div>
+        <div class="class-list" id="classList" aria-live="polite"></div>
       </article>
+      <div class="classes-footer">
+        <button class="button light small" id="addClassButton" type="button">+ Class</button>
+        <span class="save-note" id="saveNote">Goals save on this device</span>
+      </div>
     </section>
   </main>
 
@@ -1223,16 +1222,15 @@
       function openReports() { reportPeriod = 'daily'; renderReports(); el('#reportsDialog').showModal(); }
 
       function renderAll() {
-        const group = currentClass();
-        renderClassSelect();
-        renderTurnLauncher(group);
-        renderTurnAthletes(group);
-        el('#boardClassPill').textContent = group.label || group.name;
+        renderClassList();
+        renderTurnAthletes(currentClass());
       }
-      function renderClassSelect() {
-        const select = el('#classSelect');
-        select.innerHTML = state.classes.map((group) => `<option value="${group.id}">${safeText(group.name)}</option>`).join('');
-        select.value = currentClass().id;
+      function renderClassList() {
+        el('#classList').innerHTML = state.classes.map((group) => {
+          const athleteCount = group.athletes.length;
+          const playDisabled = athleteCount ? '' : ' disabled title="Use Edit to add a kid first."';
+          return `<div class="turn-launcher class-launcher"><div class="class-launcher-info"><span class="pill">${safeText(group.label || group.name)}</span><div class="turn-launcher-copy"><span class="turn-launcher-kicker">${safeText(group.name)}</span><p>${athleteCount} kid${athleteCount === 1 ? '' : 's'} · Pick a kid, enter their circles, and see their cards.</p></div></div><div class="class-launcher-actions"><button class="button light small" type="button" data-edit-class="${safeText(group.id)}">Edit</button><button class="button pink small" type="button" data-play-class="${safeText(group.id)}"${playDisabled}>Play</button></div></div>`;
+        }).join('');
       }
       function renderGarden(group) {
         const garden = el('#expectationGarden');
@@ -1287,16 +1285,10 @@
         const result = calculateCards(athlete, el('#awardAmount').value);
         el('#awardCount').textContent = result.cards;
       }
-      function renderTurnLauncher(group = currentClass()) {
-        const button = el('#openTurnFlowButton');
-        const hasAthletes = group.athletes.length > 0;
-        button.disabled = !hasAthletes;
-        button.textContent = hasAthletes ? 'New turn' : 'Add an athlete first';
-      }
       function renderTurnAthletes(group) {
         el('#turnAthletes').innerHTML = group.athletes.length
           ? group.athletes.map((athlete, index) => `<button class="wizard-athlete" type="button" data-turn-athlete="${athlete.id}" style="--tap-color:${COLORS[index % COLORS.length]}">${safeText(athlete.name)}</button>`).join('')
-          : '<span class="tiny-note">Add an athlete in Settings to start a turn.</span>';
+          : '<span class="tiny-note">Use Edit for this class to add a kid.</span>';
       }
       function setTurnStep(step) {
         const athlete = athleteById(selectedTurnAthleteId);
@@ -1325,7 +1317,7 @@
         }
       }
       function openTurnWizard() {
-        if (!currentClass().athletes.length) { toast('Add an athlete in Settings to start a turn.'); playSound('error'); return; }
+        if (!currentClass().athletes.length) { toast('Use Edit to add a kid before playing.'); playSound('error'); return; }
         const dialog = el('#turnFlowDialog');
         if (!dialog.open) dialog.showModal();
         setTurnStep(selectedTurnAthleteId && athleteById(selectedTurnAthleteId) ? turnStep : 'pick');
@@ -1378,7 +1370,33 @@
         setTurnStep('result');
       }
       function closeTurnWizard() { el('#turnFlowDialog').close(); }
-      function openClassDialog() { el('#classForm').reset(); el('#classDialog').showModal(); }
+      function selectClass(classId) {
+        const group = state.classes.find((item) => item.id === classId);
+        if (!group) return null;
+        state.selectedClassId = classId;
+        settingsClassId = '';
+        resetTurn();
+        saveState();
+        renderAll();
+        return group;
+      }
+      function playClass(classId) {
+        const group = selectClass(classId);
+        if (!group || !group.athletes.length) return;
+        openTurnWizard();
+      }
+      function openClassSettings(classId) {
+        const group = selectClass(classId);
+        if (!group) return;
+        settingsClassId = classId;
+        renderManageDialog();
+        el('#manageDialog').showModal();
+      }
+      function openClassDialog() {
+        settingsClassId = '';
+        el('#classForm').reset();
+        el('#classDialog').showModal();
+      }
       function createClass(event) {
         event.preventDefault();
         const name = el('#newClassName').value.trim();
@@ -1395,25 +1413,15 @@
       function renderManageDialog() {
         const group = state.classes.find((item) => item.id === settingsClassId);
         if (!group) {
-          settingsClassId = '';
-          el('#manageDialogTitle').textContent = 'Settings';
-          el('#manageContent').innerHTML = `<p>Choose a class to add or edit students and their goals.</p>${state.classes.map((item) => `<div class="management-class"><div><strong>${safeText(item.name)}</strong><small>${item.athletes.length} active athlete${item.athletes.length === 1 ? '' : 's'}</small></div><div><button class="button light small" type="button" data-manage-class="${item.id}">Open</button></div></div>`).join('')}`;
+          el('#manageDialogTitle').textContent = 'Edit class';
+          el('#manageContent').innerHTML = '<p>That class is no longer available.</p>';
           return;
         }
         el('#manageDialogTitle').textContent = group.name;
         const studentRows = group.athletes.length
           ? group.athletes.map((athlete) => `<div class="management-class"><div><strong>${safeText(athlete.name)}</strong><small>First card: ${formatCircles(currentCircleGoal(athlete))} · Extra cards: +${formatCircles(currentIncrementGoal(athlete))}</small></div><div><button class="button light small" type="button" data-edit-athlete="${athlete.id}">Edit</button></div></div>`).join('')
           : '<p class="tiny-note">No students yet. Add one to set their card goals.</p>';
-        el('#manageContent').innerHTML = `<div class="modal-actions"><button class="button light small" type="button" data-settings-back>← Classes</button><button class="button pink small" type="button" data-add-athlete>Add student</button></div>${studentRows}`;
-      }
-      function openManageDialog() { settingsClassId = ''; renderManageDialog(); el('#manageDialog').showModal(); }
-      function selectManageClass(classId) {
-        state.selectedClassId = classId;
-        settingsClassId = classId;
-        resetTurn();
-        saveState();
-        renderAll();
-        renderManageDialog();
+        el('#manageContent').innerHTML = `<div class="modal-actions"><button class="button pink small" type="button" data-add-athlete>Add student</button></div>${studentRows}`;
       }
       function openSettingsAthlete(athleteId = '') {
         el('#manageDialog').close();
@@ -1477,15 +1485,12 @@
         reader.readAsText(file);
       }
 
-      el('#classSelect').addEventListener('change', (event) => { state.selectedClassId = event.target.value; resetTurn(); saveState(); renderAll(); playSound('chime'); });
       el('#soundToggleButton').addEventListener('click', toggleSounds);
       el('#reportsButton').addEventListener('click', openReports);
       el('#reportStudentSelect').addEventListener('change', renderReports);
       el('#manageDataButton').addEventListener('click', openDataManager);
       el('#editRecordForm').addEventListener('submit', saveRecordEdit);
       el('#addClassButton').addEventListener('click', openClassDialog);
-      el('#manageButton').addEventListener('click', openManageDialog);
-      el('#openTurnFlowButton').addEventListener('click', openTurnWizard);
       el('#closeTurnFlowButton').addEventListener('click', closeTurnWizard);
       el('#turnFlowDialog').addEventListener('close', resetTurn);
       el('#turnCircleForm').addEventListener('submit', showTurnResult);
@@ -1506,6 +1511,10 @@
         }
         const close = event.target.closest('[data-close]');
         if (close) { el(`#${close.dataset.close}`).close(); return; }
+        const editClass = event.target.closest('[data-edit-class]');
+        if (editClass) { openClassSettings(editClass.dataset.editClass); return; }
+        const playClassButton = event.target.closest('[data-play-class]');
+        if (playClassButton) { playClass(playClassButton.dataset.playClass); return; }
         const reportPeriodButton = event.target.closest('[data-report-period]');
         if (reportPeriodButton) { reportPeriod = reportPeriodButton.dataset.reportPeriod; renderReports(); return; }
         const editRecord = event.target.closest('[data-edit-record]');
@@ -1526,15 +1535,10 @@
         if (edit) { openSettingsAthlete(edit.dataset.editAthlete); return; }
         const addAthlete = event.target.closest('[data-add-athlete]');
         if (addAthlete) { openSettingsAthlete(); return; }
-        const settingsBack = event.target.closest('[data-settings-back]');
-        if (settingsBack) { settingsClassId = ''; renderManageDialog(); return; }
-        const manage = event.target.closest('[data-manage-class]');
-        if (manage) { selectManageClass(manage.dataset.manageClass); }
       });
 
       updateSoundToggle();
       renderAll();
-      requestAnimationFrame(openTurnWizard);
     })();
   </script>
 </body>
